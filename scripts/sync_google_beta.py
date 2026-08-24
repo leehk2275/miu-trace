@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv, gzip, io, json, re, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime
+from functools import lru_cache
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -18,13 +19,36 @@ MOVEMENT={
 PRICE=("google_sheet_05","1-tpMUl-MRmdMzVLE7F637FVBOhSjkWA1rQLT0_-H67I",["공동물류","온라인"])
 DATE8=re.compile(r"(?<![0-9])(20[0-9]{6})(?![0-9])")
 ROUTE=re.compile(r"([^\s\d]+?)\s*->\s*([^\s\d]+)")
+SHEET_PERIOD=re.compile(r"^(\d{2})/(\d{2})(?:_|$)")
 
 def norm(v): return re.sub(r"[\u200b-\u200d\ufeff\s]","",str(v or "")).upper()
 def fetch(book,sheet):
  q=urllib.parse.urlencode({"tqx":"out:csv","sheet":sheet})
  req=urllib.request.Request(f"https://docs.google.com/spreadsheets/d/{book}/gviz/tq?{q}",headers={"User-Agent":"MIU-Trace-Beta/0.2"})
  with urllib.request.urlopen(req,timeout=45) as res: return list(csv.reader(io.StringIO(res.read().decode("utf-8-sig"))))
-def source_url(book,sheet): return f"https://docs.google.com/spreadsheets/d/{book}/edit#sheet={urllib.parse.quote(sheet)}"
+@lru_cache(maxsize=None)
+def worksheet_gids(book):
+ page=urllib.request.urlopen(urllib.request.Request(f"https://docs.google.com/spreadsheets/d/{book}/edit",headers={"User-Agent":"MIU-Trace-Beta/0.3"}),timeout=45).read().decode("utf-8","ignore")
+ return {sheet:gid for gid,sheet in re.findall(r'\[0,0,\\"(\d+)\\",\[\{\\"1\\":\[\[0,0,\\"([^\\]+)\\"\]',page)}
+def a1_column(column):
+ letters=[]
+ while column:
+  column,remainder=divmod(column-1,26);letters.append(chr(65+remainder))
+ return "".join(reversed(letters))
+def source_url(book,sheet,row,column):
+ gids=worksheet_gids(book); gid=gids.get(sheet) or next(iter(gids.values()),"0")
+ target=urllib.parse.quote(f"{sheet}!{a1_column(column)}{row}",safe="")
+ return f"https://docs.google.com/spreadsheets/d/{book}/edit#gid={gid}&range={target}"
+def movement_day(raw_day,sheet):
+ try: parsed=date(int(raw_day[:4]),int(raw_day[4:6]),int(raw_day[6:8]))
+ except ValueError:return None,None
+ period=SHEET_PERIOD.match(sheet)
+ if period:
+  expected_year,expected_month=2000+int(period.group(1)),int(period.group(2))
+  if parsed.month==expected_month and parsed.year==expected_year+10:
+   corrected=date(expected_year,expected_month,parsed.day)
+   return corrected.isoformat(),f"원본 헤더 {raw_day} · worksheet {sheet} 기준 연도 보정"
+ return parsed.isoformat(),None
 def wanted(code,targets): return bool(code and BARCODE.match(code) and (targets is None or code in targets))
 def movement_events(source,book,sheet,rows,targets=TARGETS):
  out=[]
@@ -34,8 +58,8 @@ def movement_events(source,book,sheet,rows,targets=TARGETS):
   dm,rm=DATE8.search(header),ROUTE.search(header)
   if not dm or not rm:continue
   raw_day=dm.group(1)
-  try: day=date(int(raw_day[:4]),int(raw_day[4:6]),int(raw_day[6:8])).isoformat()
-  except ValueError: continue
+  day,date_note=movement_day(raw_day,sheet)
+  if not day: continue
   before,after=rm.group(1).strip(),rm.group(2).strip()
   found=set()
   for token in re.findall(r"[A-Za-z]{1,5}\d{1,12}|\d{12,14}",header):
@@ -44,7 +68,9 @@ def movement_events(source,book,sheet,rows,targets=TARGETS):
   for row_no,row in enumerate(rows[1:],2):
    if col<len(row) and wanted(norm(row[col]),targets):found.add((norm(row[col]),row_no))
   for code,row_no in found:
-   out.append({"barcode":code,"type":"LOCATION_CHANGE","label":"위치 이동","from":day,"precision":"DATE","confidence":"HIGH","before":before,"after":after,"source_family":"GOOGLE_SHEETS","source_id":source,"worksheet":sheet,"row":row_no,"column":col+1,"evidence":f"Google Sheets · {sheet} · {day} · {before} → {after}","source_url":source_url(book,sheet)})
+   evidence=f"Google Sheets · {sheet} · {day} · {before} → {after}"
+   if date_note:evidence+=f" · {date_note}"
+   out.append({"barcode":code,"type":"LOCATION_CHANGE","label":"위치 이동","from":day,"precision":"DATE","confidence":"HIGH","before":before,"after":after,"source_family":"GOOGLE_SHEETS","source_id":source,"worksheet":sheet,"row":row_no,"column":col+1,"evidence":evidence,"source_url":source_url(book,sheet,row_no,col+1)})
  return out
 def parse_day(v):
  m=re.search(r"(20\d{2})\s*\.\s*(\d{1,2})\s*\.\s*(\d{1,2})",v)
@@ -58,7 +84,7 @@ def price_events(source,book,sheet,rows,targets=TARGETS):
   for row_no,row in enumerate(rows[1:],2):
    if col>=len(row) or not wanted(norm(row[col]),targets):continue
    code=norm(row[col]); raw=row[col+1] if col+1<len(row) else ""; digits=re.sub(r"[^0-9-]","",raw)
-   out.append({"barcode":code,"type":"PRICE_CHANGE","label":"가격 수정","from":day,"precision":"DATE","confidence":"HIGH","after":int(digits) if digits else None,"location":sheet,"source_family":"GOOGLE_SHEETS","source_id":source,"worksheet":sheet,"row":row_no,"column":col+1,"evidence":f"Google Sheets · {sheet} · {day} · {raw or '가격 미확인'}","source_url":source_url(book,sheet)})
+   out.append({"barcode":code,"type":"PRICE_CHANGE","label":"가격 수정","from":day,"precision":"DATE","confidence":"HIGH","after":int(digits) if digits else None,"location":sheet,"source_family":"GOOGLE_SHEETS","source_id":source,"worksheet":sheet,"row":row_no,"column":col+1,"evidence":f"Google Sheets · {sheet} · {day} · {raw or '가격 미확인'}","source_url":source_url(book,sheet,row_no,col+1)})
  return out
 def dedupe(events):
  grouped={}

@@ -18,6 +18,11 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Added a dedicated `초기화` button next to `한번에 조회` in bulk search. It clears the pasted list, result cards, and count, while keeping the user in the bulk-search input.
 - Replaced the bulk-card event-count badge (`n건`) with the actionable current-state badge (`보유`, `판매됨`, `폐기`, or `상태 미확인`). The state badge remains visible on mobile; event counts remain available after expanding a card.
 
+## 2026-08-24 — Google Sheets evidence integrity
+
+- Investigated 36 false 2035 movement events. Their `25/12` worksheet headers contained the literal typo `20351208`; the parser now corrects only the corroborated ten-year typo to the worksheet period (`2025-12-08`) and preserves an explanatory evidence note.
+- Google Sheets evidence URLs now target the event cell using its worksheet, column, and row (`gid` plus A1 range), instead of the ignored `#sheet=` anchor that opened a worksheet at its starting cell. The browser applies the same link correction to already-published static events immediately.
+
 ## Beta update — Public Google Sheets
 
 - Public CSV profiling completed for all 20 supplied worksheets.
