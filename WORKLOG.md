@@ -8,6 +8,7 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - The same first-confirmed timestamp is the ordering key for those range events. This makes multiple price changes deterministic in date/time order instead of relying on ambiguous monthly range starts.
 - Added the MIU Trace home-screen icon: a pale-gray field with a black footprint trail and lower-left magnifier. It is wired into the web manifest, browser favicon, Apple touch icon, and updated service-worker cache.
 - Refined the icon to match the GitHub-inspired MIU Trace palette (`#f6f8fa`, graphite, restrained blue). Footprints and magnifier now have deliberately subtle 3D depth while remaining legible at small home-screen sizes.
+- Enlarged the lower-left magnifier by roughly one quarter while preserving the footprint trail, improving recognizability on phone home screens.
 
 ## Beta update — Public Google Sheets
 
