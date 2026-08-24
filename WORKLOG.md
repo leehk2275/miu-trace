@@ -10,6 +10,12 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Refined the icon to match the GitHub-inspired MIU Trace palette (`#f6f8fa`, graphite, restrained blue). Footprints and magnifier now have deliberately subtle 3D depth while remaining legible at small home-screen sizes.
 - Enlarged the lower-left magnifier by roughly one quarter while preserving the footprint trail, improving recognizability on phone home screens.
 
+## 2026-08-24 — Scanner-friendly barcode entry
+
+- Added a single-search `초기화` button. It clears the current result and both barcode inputs, resets the bulk count, and returns focus to the initial one-barcode screen.
+- Barcode entry now normalizes to uppercase before lookup. Hardware key events use the physical Latin key code, so a barcode scanner still produces the correct A–Z characters when the device keyboard is in Korean mode.
+- Text inserted without physical key events is also normalized: lowercase letters become uppercase and Korean keyboard jamo/syllables are converted back to their corresponding two-set QWERTY barcode characters. This applies to both single and bulk entry.
+
 ## Beta update — Public Google Sheets
 
 - Public CSV profiling completed for all 20 supplied worksheets.
