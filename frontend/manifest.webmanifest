@@ -1,2 +1,2 @@
-{"name":"MIU Trace","short_name":"MIU Trace","start_url":"./","scope":"./","display":"standalone","background_color":"#f4f0e6","theme_color":"#12261e","description":"근거 기반 상품 이력 조회"}
+{"name":"MIU Trace","short_name":"MIU Trace","start_url":"./","scope":"./","display":"standalone","background_color":"#f3f4f6","theme_color":"#f3f4f6","description":"근거 기반 상품 이력 조회","icons":[{"src":"assets/miu-trace-footprints.png","sizes":"1024x1024","type":"image/png","purpose":"any maskable"}]}
 

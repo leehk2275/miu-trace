@@ -1,6 +1,12 @@
 # MIU Trace Worklog
 
-Last updated: 2026-08-20 (Asia/Seoul)
+Last updated: 2026-08-24 (Asia/Seoul)
+
+## 2026-08-24 — First-confirmed timeline display and PWA icon
+
+- Range-precision events now use the audit archive's exact `최초 확인` timestamp as the primary timeline date when it exists. The source-date limitation remains visible as `원장상 추정 기간`, so the page does not present a monthly-snapshot estimate as a fabricated event date.
+- The same first-confirmed timestamp is the ordering key for those range events. This makes multiple price changes deterministic in date/time order instead of relying on ambiguous monthly range starts.
+- Added the MIU Trace home-screen icon: a pale-gray field with a black footprint trail and lower-left magnifier. It is wired into the web manifest, browser favicon, Apple touch icon, and updated service-worker cache.
 
 ## Beta update — Public Google Sheets
 
