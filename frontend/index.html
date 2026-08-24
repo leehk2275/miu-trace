@@ -29,13 +29,13 @@
       <form id="bulk-search" class="search-mode" role="tabpanel" aria-labelledby="bulk-tab" hidden>
         <label for="barcodes">바코드 목록</label>
         <textarea id="barcodes" rows="7" placeholder="줄바꿈, 쉼표 또는 공백으로 구분하세요.&#10;HK30034&#10;C24306&#10;YH25032085" autocapitalize="characters" spellcheck="false"></textarea>
-        <div class="bulk-actions"><span id="bulk-count">0개 입력</span><button type="submit">한번에 조회</button></div>
+        <div class="bulk-actions"><span id="bulk-count">0개 입력</span><div><button type="submit">한번에 조회</button><button type="button" class="bulk-reset" id="bulk-reset">초기화</button></div></div>
         <p class="bulk-note">중복은 자동 제거되며 한 번에 최대 500개까지 조회합니다.</p>
       </form>
     </section>
     <section id="result" aria-live="polite"></section>
   </main>
   <footer><span>MIU Trace</span><span>Evidence-first product history</span></footer>
-  <script src="config.js?v=10"></script><script src="assets/app.js?v=12"></script>
+  <script src="config.js?v=10"></script><script src="assets/app.js?v=13"></script>
 </body>
 </html>
