@@ -15,3 +15,4 @@
 .status-pill.status-discarded,.batch-status.status-discarded{background:#fff1e5;color:#bc4c00;border-color:#fb8f4466}
 @media(max-width:640px){.intro h1{font-size:36px}}
 .event[data-type="RECEIVED"] .change>span:first-child,.event[data-type="RECEIVED"] .change>.change-arrow{display:none}
+.batch-item summary{grid-template-columns:18px minmax(90px,.7fr) minmax(150px,1.5fr) minmax(80px,.7fr) auto}@media(max-width:760px){.batch-item summary{grid-template-columns:16px minmax(78px,.8fr) minmax(0,1.6fr) auto}.batch-location{display:none}.batch-status{display:inline-flex}}

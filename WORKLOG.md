@@ -16,6 +16,7 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Barcode entry now normalizes to uppercase before lookup. Hardware key events use the physical Latin key code, so a barcode scanner still produces the correct A–Z characters when the device keyboard is in Korean mode.
 - Text inserted without physical key events is also normalized: lowercase letters become uppercase and Korean keyboard jamo/syllables are converted back to their corresponding two-set QWERTY barcode characters. This applies to both single and bulk entry.
 - Added a dedicated `초기화` button next to `한번에 조회` in bulk search. It clears the pasted list, result cards, and count, while keeping the user in the bulk-search input.
+- Replaced the bulk-card event-count badge (`n건`) with the actionable current-state badge (`보유`, `판매됨`, `폐기`, or `상태 미확인`). The state badge remains visible on mobile; event counts remain available after expanding a card.
 
 ## Beta update — Public Google Sheets
 
