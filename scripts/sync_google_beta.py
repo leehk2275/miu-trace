@@ -37,8 +37,7 @@ def a1_column(column):
  return "".join(reversed(letters))
 def source_url(book,sheet,row,column):
  gids=worksheet_gids(book); gid=gids.get(sheet) or next(iter(gids.values()),"0")
- target=urllib.parse.quote(f"{sheet}!{a1_column(column)}{row}",safe="")
- return f"https://docs.google.com/spreadsheets/d/{book}/edit#gid={gid}&range={target}"
+ return f"https://docs.google.com/spreadsheets/d/{book}/edit#gid={gid}&range={a1_column(column)}{row}"
 def movement_day(raw_day,sheet):
  try: parsed=date(int(raw_day[:4]),int(raw_day[4:6]),int(raw_day[6:8]))
  except ValueError:return None,None
