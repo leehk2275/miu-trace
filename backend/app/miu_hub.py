@@ -11,12 +11,12 @@ import json
 import os
 import re
 import sqlite3
+import urllib.parse
+import urllib.request
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
-
-import requests
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX = Path(os.getenv("MIU_TRACE_MIU_HUB_INDEX", ROOT / "var" / "miu-hub-index.sqlite"))
@@ -60,10 +60,10 @@ def fetch_all(url: str, key: str, table: str, select: str, order: str, extra: di
     start = 0
     headers = {"apikey": key, "Authorization": f"Bearer {key}", "Range-Unit": "items"}
     while True:
-        params = {"select": select, "order": order, **(extra or {})}
-        response = requests.get(f"{url}/rest/v1/{table}", params=params, headers={**headers, "Range": f"{start}-{start + 999}"}, timeout=60)
-        response.raise_for_status()
-        page = response.json()
+        params = urllib.parse.urlencode({"select": select, "order": order, **(extra or {})})
+        request = urllib.request.Request(f"{url}/rest/v1/{table}?{params}", headers={**headers, "Range": f"{start}-{start + 999}"})
+        with urllib.request.urlopen(request, timeout=60) as response:
+            page = json.loads(response.read().decode("utf-8"))
         if not isinstance(page, list):
             raise RuntimeError(f"Unexpected {table} response")
         rows.extend(page)

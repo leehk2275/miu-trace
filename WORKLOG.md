@@ -26,6 +26,7 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Final Google URL correction: once the exact worksheet gid is set, the range must contain only the A1 cell reference (`range=FZ140`). The earlier sheet-qualified, percent-encoded range could navigate to the correct tab but be ignored as a selected cell.
 - Fixed Korean keyboard barcode entry duplicating letters (for example, `CR` becoming `CCRR`). Input conversion now waits until IME composition ends before converting Hangul keystrokes to their English QWERTY barcode equivalents.
 - Added MIU Hub Supabase as the operational authority for live intake, movement, price, and sale events. It is periodically copied into a separate local index, merged with Dropbox, Google Sheets, and the append-only archive, and wins only when sources describe the same event date/type.
+- Live backfill verification on 2026-08-27 indexed 190,252 MIU Hub events. `CR03727` now yields the verified order: 2026-07-07 intake (initial location online corroborated by the first move), 07-16 online→상수, 08-10 상수→온라인, and 08-24 온라인→성수.
 
 ## Beta update — Public Google Sheets
 
