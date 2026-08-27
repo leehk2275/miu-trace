@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.dropbox_index import normalize_category
 from backend.app.event_archive import archived_events_for_barcode, mark_observed_events
+from backend.app.miu_hub import INDEX as MIU_HUB_INDEX
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC_DATA = Path(os.getenv("MIU_TRACE_DATA", ROOT / "frontend" / "data" / "beta-events.json"))
@@ -66,6 +67,17 @@ def index_query(code):
     return product, events, meta
 
 
+def miu_hub_query(code):
+    if not MIU_HUB_INDEX.exists():
+        return None, []
+    connection = sqlite3.connect(f"file:{MIU_HUB_INDEX.as_posix()}?mode=ro", uri=True)
+    row = connection.execute("SELECT payload FROM products WHERE barcode=?", (code,)).fetchone()
+    product = json.loads(row[0]) if row else None
+    events = [json.loads(item[0]) for item in connection.execute("SELECT payload FROM events WHERE barcode=? ORDER BY occurred", (code,))]
+    connection.close()
+    return product, events
+
+
 def google_events(code):
     now = time.time()
     cached = google_cache.get(code)
@@ -92,6 +104,13 @@ def dedupe(events):
         if key not in seen:
             seen.add(key); result.append(event)
     return result
+
+
+def prefer_miu_hub(events):
+    """Keep the operating ledger when two sources describe the same calendar event."""
+    authoritative = [event for event in events if event.get("source_family") == "MIU_HUB_SUPABASE"]
+    keys = {(event.get("type"), (event.get("from") or "")[:10]) for event in authoritative}
+    return [event for event in events if event.get("source_family") == "MIU_HUB_SUPABASE" or (event.get("type"), (event.get("from") or "")[:10]) not in keys]
 
 
 def enforce_lifecycle(events, product):
@@ -167,6 +186,11 @@ def resolve_current_state(product, events):
     if state["location"] == "폐기":
         state["status"] = "폐기"
         return state
+    moves = [event for event in events if event.get("type") in {"LOCATION_CHANGE", "DISCARDED"} and event.get("after")]
+    if moves:
+        latest_move = max(moves, key=lambda event: event.get("from") or "")
+        state["location"] = latest_move["after"]
+        state["updated_at"] = latest_move.get("from") or state["updated_at"]
     transactions = [event for event in events if event.get("type") in {"SOLD", "REFUND"}]
     if transactions:
         latest = max(transactions, key=lambda event: (event.get("from") or "", event.get("source_file") or "", event.get("row") or 0, event.get("archive_first_seen_at") or ""))
@@ -176,11 +200,14 @@ def resolve_current_state(product, events):
 
 def build_timeline(code, include_live_google=True):
     product, dropbox, meta = index_query(code)
+    hub_product, hub_events = miu_hub_query(code)
+    if hub_product:
+        product = {**hub_product, **{key: value for key, value in (product or {}).items() if value is not None}}
     static = [event for event in static_payload().get("events", []) if event.get("barcode") == code]
     live_google, google_diagnostics = ([], []) if static or not include_live_google else google_events(code)
     archived = archived_events_for_barcode(code)
-    current_events = mark_observed_events(dropbox + static + live_google, archived)
-    events = fill_event_state(enforce_lifecycle(dedupe(current_events + archived), product))
+    current_events = mark_observed_events(dropbox + static + live_google + hub_events, archived)
+    events = fill_event_state(enforce_lifecycle(dedupe(prefer_miu_hub(current_events + archived)), product))
     summary, counts = summarize(code, product, events)
     return {"barcode": code, "found": bool(product or events), "product": product, "current_state": resolve_current_state(product, events), "summary": summary, "counts": counts, "events": events, "count": len(events), "generated_at": meta.get("generated_at") or static_payload().get("generated_at"), "sales_coverage_end": meta.get("sales_coverage_end"), "google_diagnostics": google_diagnostics}
 

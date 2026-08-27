@@ -25,6 +25,7 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Follow-up validation found that Google assigns a different `gid` to every worksheet; a document-level fallback gid can still open an incorrect tab. Added the exact gid map for all 20 supplied worksheets. For the reported `CR00153` record, the evidence URL now resolves to worksheet `26/03` (`gid=85369831`), cell `FZ140`.
 - Final Google URL correction: once the exact worksheet gid is set, the range must contain only the A1 cell reference (`range=FZ140`). The earlier sheet-qualified, percent-encoded range could navigate to the correct tab but be ignored as a selected cell.
 - Fixed Korean keyboard barcode entry duplicating letters (for example, `CR` becoming `CCRR`). Input conversion now waits until IME composition ends before converting Hangul keystrokes to their English QWERTY barcode equivalents.
+- Added MIU Hub Supabase as the operational authority for live intake, movement, price, and sale events. It is periodically copied into a separate local index, merged with Dropbox, Google Sheets, and the append-only archive, and wins only when sources describe the same event date/type.
 
 ## Beta update — Public Google Sheets
 

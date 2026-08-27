@@ -11,6 +11,7 @@ EnvironmentFile=/etc/miu-trace.env
 Environment=PYTHONPATH=/opt/miu-trace
 ExecStart=/opt/miu-trace/.venv/bin/python scripts/sync_dropbox_beta.py
 ExecStart=/opt/miu-trace/.venv/bin/python scripts/sync_google_beta.py
+ExecStart=/opt/miu-trace/.venv/bin/python scripts/sync_miu_hub.py
 ExecStart=/opt/miu-trace/.venv/bin/python scripts/archive_events.py
 ExecStart=/opt/miu-trace/.venv/bin/python scripts/export_pages_snapshot.py
 ExecStart=/opt/miu-trace/.venv/bin/python scripts/publish_pages_data.py
