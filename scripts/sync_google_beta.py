@@ -29,7 +29,7 @@ def fetch(book,sheet):
 @lru_cache(maxsize=None)
 def worksheet_gids(book):
  page=urllib.request.urlopen(urllib.request.Request(f"https://docs.google.com/spreadsheets/d/{book}/edit",headers={"User-Agent":"MIU-Trace-Beta/0.3"}),timeout=45).read().decode("utf-8","ignore")
- return {sheet:gid for gid,sheet in re.findall(r'\[0,0,\\"(\d+)\\",\[\{\\"1\\":\[\[0,0,\\"([^\\]+)\\"\]',page)}
+ return {sheet:gid for gid,sheet in re.findall(r'\[\d+,0,\\"(\d+)\\",\[\{\\"1\\":\[\[0,0,\\"([^\\]+)\\"\]',page)}
 def a1_column(column):
  letters=[]
  while column:
