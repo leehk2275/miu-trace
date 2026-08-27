@@ -24,6 +24,7 @@ Last updated: 2026-08-24 (Asia/Seoul)
 - Google Sheets evidence URLs now target the event cell using its worksheet, column, and row (`gid` plus A1 range), instead of the ignored `#sheet=` anchor that opened a worksheet at its starting cell. The browser applies the same link correction to already-published static events immediately.
 - Follow-up validation found that Google assigns a different `gid` to every worksheet; a document-level fallback gid can still open an incorrect tab. Added the exact gid map for all 20 supplied worksheets. For the reported `CR00153` record, the evidence URL now resolves to worksheet `26/03` (`gid=85369831`), cell `FZ140`.
 - Final Google URL correction: once the exact worksheet gid is set, the range must contain only the A1 cell reference (`range=FZ140`). The earlier sheet-qualified, percent-encoded range could navigate to the correct tab but be ignored as a selected cell.
+- Fixed Korean keyboard barcode entry duplicating letters (for example, `CR` becoming `CCRR`). Input conversion now waits until IME composition ends before converting Hangul keystrokes to their English QWERTY barcode equivalents.
 
 ## Beta update — Public Google Sheets
 
