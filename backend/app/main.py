@@ -113,14 +113,26 @@ def prefer_miu_hub(events):
     return [event for event in events if event.get("source_family") == "MIU_HUB_SUPABASE" or (event.get("type"), (event.get("from") or "")[:10]) not in keys]
 
 
+def is_dropbox_snapshot_movement(event):
+    """Monthly Dropbox comparisons show a changed state, not the actual move."""
+    return (
+        event.get("source_family") == "DROPBOX_COMMON_SALES"
+        and event.get("type") in {"LOCATION_CHANGE", "DISCARDED"}
+        and event.get("evidence", "").startswith("Dropbox 월별 입고 스냅샷 비교")
+    )
+
+
 def enforce_lifecycle(events, product):
-    """Do not display snapshot inferences before the authoritative receiving date."""
+    """Keep direct ledger events in the timeline and discard snapshot-only moves."""
     received = (product or {}).get("received_at")
-    if not received:
-        return sorted(events, key=lambda item: (item.get("from") or "", EVENT_ORDER.get(item.get("type"), 99)))
     result = []
     for original in events:
         event = dict(original)
+        if is_dropbox_snapshot_movement(event):
+            continue
+        if not received:
+            result.append(event)
+            continue
         inferred_snapshot = event.get("precision") == "RANGE" and event.get("source_family") == "DROPBOX_COMMON_SALES"
         if inferred_snapshot and (event.get("from") or "") < received:
             if event.get("to") and event["to"] > received:
